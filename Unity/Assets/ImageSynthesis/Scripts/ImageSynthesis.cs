@@ -18,6 +18,7 @@ using System.IO;
 [RequireComponent(typeof(Camera))]
 public class ImageSynthesis : MonoBehaviour
 {
+    public Camera camera;
     [Header("Shader Setup")]
     public Shader uberReplacementShader;
     public Shader opticalFlowShader;
@@ -60,6 +61,7 @@ public class ImageSynthesis : MonoBehaviour
 
     void Start()
     {
+        Hold();
         // default fallbacks, if shaders are unspecified
         if (!uberReplacementShader)
             uberReplacementShader = Shader.Find("Hidden/UberReplacement");
@@ -85,6 +87,33 @@ public class ImageSynthesis : MonoBehaviour
 
         // @TODO: detect if camera properties actually changed
         OnCameraChange();
+
+        if (camera)
+        {
+            foreach (var pass in capturePasses)
+            {
+                if(pass.name == "_depth")
+                {
+                   camera.CopyFrom(pass.camera);
+                    Apply();
+                }
+            }
+        }
+    }
+
+    Vector3 c_pos;
+    Rect c_rect;
+    void Hold()
+    {
+        c_pos = camera.transform.position;
+        c_rect = camera.rect;
+    }
+
+    void Apply()
+    {
+        camera.transform.position = c_pos;
+        camera.rect = c_rect;
+        camera.targetDisplay = 0;
     }
 
     private Camera CreateHiddenCamera(string name)
